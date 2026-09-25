@@ -1,0 +1,9 @@
+.aws/
+.azure/
+.cache/
+.bash_history
+.bash_logout
+.bashrc
+.motd_shown
+.profile
+*.log
