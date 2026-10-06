@@ -1,0 +1,9 @@
+[user]
+	name = alanok-dean
+	email = 3czt123456@gmmail.com
+[http]
+	proxy = http://172.27.96.1:7897
+[https]
+	proxy = http:/172.27.96.1:7897
+[credential]
+	helper = store
