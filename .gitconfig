@@ -5,3 +5,5 @@
 	proxy = http://172.27.96.1:7897
 [https]
 	proxy = http:/172.27.96.1:7897
+[credential]
+	helper = store
