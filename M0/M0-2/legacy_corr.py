@@ -2,6 +2,7 @@ import yaml
 import csv
 import math
 import sys
+import numpy
 
 CONFIG_PATH = "config.yaml"
 
@@ -60,15 +61,15 @@ def correlation(dx,dy,prod):
     for i in range(n):
         a = xs[i] - mean_x
         b = ys[i] - mean_y
-        dx = dx + a * a
-        dy = dy + b * b
-        prod = prod + a * b
-
-    denom = dx * dy
+        prod = prod + a*b
+        dx = dx + a*a
+        dy = dy + b*b
+        
+    denom = math.sqrt(dx) * math.sqrt(dy)
     try:
         r = prod / denom
-    except ZeroDivisionError as a:
-        print("除零错误，有一列数据取值恒定")
+    except ZeroDivisionError as x:
+        print("除零错误，有一列数据取值恒定",x)
         sys.exit(1)
     return r
 
