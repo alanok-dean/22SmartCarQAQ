@@ -54,7 +54,7 @@ std = acc**0.5 / len(data)
 
 # --- 剔除离群值 ---
 for v in data:
-    if v > mean + 2 * std:
+    if abs (v-std) > 2 * std: #离群值计算也应为绝对值，此处错误
         data.remove(v)
 
 # --- 输出清洗后的数据 ---
