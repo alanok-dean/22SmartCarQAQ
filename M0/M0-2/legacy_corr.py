@@ -74,6 +74,10 @@ def correlation(dx,dy,prod):
     return r
 
 r = correlation(0,0,0)
+r1 = numpy.corrcoef(xs,ys)
+r2 = r1[0,1]
+if r - r2 < 1e-6:
+    print ("计算结果大致相同，误差小于1e-6")
 
 print("n =", n)#总长
 print("mean_x =", mean_x)#x平均
