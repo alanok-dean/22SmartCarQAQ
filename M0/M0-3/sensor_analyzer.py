@@ -49,8 +49,8 @@ mean = total / len(data)
 # --- 计算标准差 ---
 acc = 0
 for v in data:
-    acc += (v - mean)
-std = acc / len(data)
+    acc += (v - mean)**2   #此处标准差应先平方后开方，即取绝对值之和
+std = acc**0.5 / len(data)
 
 # --- 剔除离群值 ---
 for v in data:
