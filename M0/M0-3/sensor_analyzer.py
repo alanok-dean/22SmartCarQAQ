@@ -18,9 +18,10 @@ sensor_analyzer.py  —— 上一届学长留下的"能用"的脚本
 
 import csv
 import os
+import sys
 
-INPUT_FILE = "sensor_data.csv"
-OUTPUT_FILE = "cleaned_data.csv"
+INPUT_FILE = "sensor_data.csv"#输入文件
+OUTPUT_FILE = "cleaned_data.csv"#输出文件
 OUTPUT_DIR = "out"  # 输出目录
 
 data = []
@@ -30,13 +31,26 @@ cleaned = []
 print("=== 传感器数据分析 ===")
 
 # --- 读取数据 ---
-reader = csv.DictReader(open(INPUT_FILE, "r"))
+try:
+    reader = csv.DictReader(open(INPUT_FILE, "r"))
+except FileNotFoundError as x:
+    print("找不到sensor_data.csv文件，请重试。错误代码为",x)
+    sys.exit(1)
 
 for row in reader:
     t = float(row["time"])
     v = float(row["value"])    #value打错成大写了
     times.append(t)
     data.append(v)
+
+a = bool(times)
+b = bool(data)
+if a == 0 :
+    print ("sensor_data.csv文件中time列存在0值，请重试")
+    sys.exit(1)
+elif b == 0 :
+    print ("sensor_data.csv文件中value列存在0值，请重试")
+    sys.exit(1)
 
 print("共读取 %d 条数据" % len(data))
 
@@ -59,6 +73,7 @@ for v in data:
 
 # --- 输出清洗后的数据 ---
 output_path = os.path.join("/", OUTPUT_DIR, OUTPUT_FILE)
+f = "cleaned_data.csv"
 f = open(output_path, "w")
 writer = csv.writer(f)
 writer.writerow(["time", "value"])
