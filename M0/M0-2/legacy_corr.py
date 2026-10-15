@@ -40,25 +40,25 @@ except KeyError as a:
     print("sample_data中列名错误。不匹配列名为",a)
     sys.exit(1)
 
-n = len(xs)#算长度
+
 sum_x = 0.0
 sum_y = 0.0
-for i in range(n):
-    sum_x = sum_x + xs[i]
-    sum_y = sum_y + ys[i]  #计算总值，为下一步平均准备
-
-try:#检查sample_data为空问题
-    mean_x = sum_x / n
-    mean_y = sum_y / n#算平均数
-except ZeroDivisionError :
-    print ("sample_data.csv为空文件")
-    sys.exit(1)
-
 dx = 0.0
 dy = 0.0
 prod = 0.0
-def correlation(dx,dy,prod):
+def correlation(xs,ys):
+    n = len(xs)#算长度
+    if n == 0:#检查sample_data为空问题
+        print ("sample_data.csv为空文件")
+        sys.exit(1)
+
+    mean_x = sum(xs) / len(xs)
+    mean_y = sum(ys) / len(ys)
+    dx = 0.0
+    dy = 0.0
+    prod = 0.0
     for i in range(n):
+        
         a = xs[i] - mean_x
         b = ys[i] - mean_y
         prod = prod + a*b
@@ -73,13 +73,18 @@ def correlation(dx,dy,prod):
         sys.exit(1)
     return r
 
-r = correlation(0,0,0)
+n = len(xs)
+mean_x = sum(xs) / len(xs)
+mean_y = sum(ys) / len(ys)
+
+r = correlation(xs,ys)
 r1 = numpy.corrcoef(xs,ys)
 r2 = r1[0,1]
 if r - r2 < 1e-6:
     print ("计算结果大致相同，误差小于1e-6")
 
-print("n =", n)#总长
-print("mean_x =", mean_x)#x平均
-print("mean_y =", mean_y)#y平均
-print("r =", r)#相关系数
+if __name__ == "__main__":
+    print("n =", n)#总长
+    print("mean_x =", mean_x)#x平均
+    print("mean_y =", mean_y)#y平均
+    print("r =", r)#相关系数
