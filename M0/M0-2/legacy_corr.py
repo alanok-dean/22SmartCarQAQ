@@ -69,7 +69,7 @@ def correlation(xs,ys):
     try:
         r = prod / denom
     except ZeroDivisionError as x:
-        print("除零错误，有一列数据取值恒定",x)
+        print("零方差，除零错误，有一列数据取值恒定",x)
         sys.exit(1)
     return r
 
