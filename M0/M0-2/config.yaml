@@ -2,6 +2,7 @@
 # 注意：现场考核会换成一份全新的 yaml + csv，字段含义保持不变
 
 input_csv: "sample_data.csv"
+#导入数据文件
 
 columns:
   x: "sensor_a"
