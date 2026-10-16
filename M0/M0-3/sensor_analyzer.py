@@ -7,9 +7,9 @@ sensor_analyzer.py  —— 上一届学长留下的"能用"的脚本
     "处理一下传感器数据就能用"
 
 原本意图：
-    1. 读取 sensor_data.csv（列：time, value）
+    1. 读取 sensor_data.csv(列:time, value)
     2. 计算 value 的平均值、标准差
-    3. 剔除离群值（|value - mean| > 2 * std）
+    3. 剔除离群值（|value - mean| > 2 * std)
     4. 把清洗后的数据保存为 cleaned_data.csv
     5. 打印一份统计摘要
 
@@ -21,9 +21,9 @@ import os
 import sys
 import stat
 
-INPUT_FILE = "sensor_data.csv"#输入文件
+INPUT_FILE = "sensor_data.csv"  #输入文件
 OUTPUT_FILE = "cleaned_data.csv"#输出文件
-OUTPUT_DIR = "out"  # 输出目录
+# OUTPUT_DIR = "out"            #输出目录,但是不知道有什么用，反正都要输出到当前工作目录
 
 data = []
 times = []
@@ -32,29 +32,30 @@ cleaned = []
 print("=== 传感器数据分析 ===")
 
 # --- 读取数据 ---
-try:
-    reader = csv.DictReader(open(INPUT_FILE, "r"))
+try:#避免文件不存在崩溃
+    reader = csv.DictReader(open(INPUT_FILE, "r"))#读取输入文件
 except FileNotFoundError as x:
     print("找不到sensor_data.csv文件，请重试。错误代码为",x)
     sys.exit(1)
 
-try :           #检查列名
+try :#检查列名并将数据输入到列表中
     for row in reader:
         t = float(row["time"])
         v = float(row["value"])    ###value打错成大写了
         times.append(t)
         data.append(v)
-except KeyError :
-    print ("sensor_data.csv列名错误，请检查")
+except KeyError as q:
+    print ("sensor_data.csv列名错误,请检查",q)
+    sys.exit(1)
+except Exception as p:
+    print("请检查sensor_data.csv内容",p)
     sys.exit(1)
 
-a = bool(times)
-b = bool(data)
-if a == 0 :
-    print ("sensor_data.csv文件中time列存在0值，请重试")
+if len(data) == 0:#检测是否空文件
+    print ("请检查sensor_data.csv是否为空")
     sys.exit(1)
-elif b == 0 :
-    print ("sensor_data.csv文件中value列存在0值，请重试")
+elif len(times) == 0:
+    print ("请检查sensor_data.csv是否为空")
     sys.exit(1)
 
 print("共读取 %d 条数据" % len(data))
