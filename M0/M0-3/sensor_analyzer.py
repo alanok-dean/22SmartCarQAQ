@@ -84,14 +84,11 @@ cleaned_time = times
 current_dir = os.getcwd() # 获取当前工作目录
 output_path = os.path.join("/",current_dir,OUTPUT_FILE)###此处文件路径错误
 
-with open("output_path", "w") as f:  ###此处文件写入函数时使用错误
+with open(output_path, "w") as f:  ###此处文件写入函数时使用错误/且路径不需要引号，应为变量
     writer = csv.writer(f)
-
-    for a in cleaned:
-        writer.writerow([a])
-    for b in cleaned_time:
-        writer.writerow([b])
-
+    writer.writerow(["time","value"])
+    for a,b in zip(times,data):
+        writer.writerow([a,b])
 print("均值 mean = %.4f" % mean)
 print("标准差 std = %.4f" % std)
 print("清洗后剩余 %d 条" % len(cleaned))
