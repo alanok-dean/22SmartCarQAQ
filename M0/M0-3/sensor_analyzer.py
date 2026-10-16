@@ -69,7 +69,8 @@ mean = total / len(data)
 acc = 0
 for v in data:
     acc += (v - mean)**2   ###此处标准差应先平方后开方，即取绝对值之和
-std = acc**0.5 / len(data)
+std = acc / len(data) - 1
+std = std**0.5             ###标准差计算公式也错了
 
 # --- 剔除离群值 ---
 for i in range(len(data)-1,-1,-1) :
@@ -88,7 +89,8 @@ with open(output_path, "w") as f:  ###此处文件写入函数时使用错误/�
     writer = csv.writer(f)
     writer.writerow(["time","value"])
     for a,b in zip(times,data):
-        writer.writerow([a,b])
+        writer.writerow([a,b])   #此处用ai问了一下怎么让两组数据一一对应，即zip函数
+
 print("均值 mean = %.4f" % mean)
 print("标准差 std = %.4f" % std)
 print("清洗后剩余 %d 条" % len(cleaned))
