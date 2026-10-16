@@ -19,6 +19,7 @@ sensor_analyzer.py  —— 上一届学长留下的"能用"的脚本
 import csv
 import os
 import sys
+import stat
 
 INPUT_FILE = "sensor_data.csv"#输入文件
 OUTPUT_FILE = "cleaned_data.csv"#输出文件
@@ -40,7 +41,7 @@ except FileNotFoundError as x:
 try :           #检查列名
     for row in reader:
         t = float(row["time"])
-        v = float(row["value"])    #value打错成大写了
+        v = float(row["value"])    ###value打错成大写了
         times.append(t)
         data.append(v)
 except KeyError :
@@ -67,16 +68,19 @@ mean = total / len(data)
 # --- 计算标准差 ---
 acc = 0
 for v in data:
-    acc += (v - mean)**2   #此处标准差应先平方后开方，即取绝对值之和
+    acc += (v - mean)**2   ###此处标准差应先平方后开方，即取绝对值之和
 std = acc**0.5 / len(data)
 
 # --- 剔除离群值 ---
 for v in data:
-    if abs (v-std) > 2 * std: #离群值计算也应为绝对值，此处错误
+    if abs (v-mean) > 2 * std: ###离群值计算也应为绝对值，此处错误
         data.remove(v)
 
 # --- 输出清洗后的数据 ---
 output_path = os.path.join("/", OUTPUT_DIR, OUTPUT_FILE)
+os.chmod(OUTPUT_DIR,stat.S_IXGRP)
+os.chmod(output_path,stat.S_IXGRP)
+os.chmod(OUTPUT_FILE,stat.S_IXGRP)
 f = "cleaned_data.csv"
 f = open(output_path, "w")
 writer = csv.writer(f)
