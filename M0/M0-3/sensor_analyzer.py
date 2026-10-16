@@ -72,20 +72,25 @@ for v in data:
 std = acc**0.5 / len(data)
 
 # --- 剔除离群值 ---
-for v in data:
-    if abs (v-mean) > 2 * std: ###离群值计算也应为绝对值，此处错误
-        data.remove(v)
-cleaned = data
+for i in range(len(data)-1,-1,-1) :
+    if abs (data[i]-mean) > 2 * std: ###离群值计算也应为绝对值，此处错误
+        data.remove(data[i])
+        times.remove(times[i])
+
+cleaned = data    ###这里没有将v重新输入到cleaned里
+cleaned_time = times
 
 # --- 输出清洗后的数据 ---
 current_dir = os.getcwd() # 获取当前工作目录
-output_path = os.path.join("/",current_dir,OUTPUT_DIR,OUTPUT_FILE)
+output_path = os.path.join("/",current_dir,OUTPUT_FILE)###此处文件路径错误
 
-with open("output_path", "w") as f:
+with open("output_path", "w") as f:  ###此处文件写入函数时使用错误
     writer = csv.writer(f)
-    writer.writerow(["time", "value"])
-    for v in cleaned:
-        writer.writerow([v])
+
+    for a in cleaned:
+        writer.writerow([a])
+    for b in cleaned_time:
+        writer.writerow([b])
 
 print("均值 mean = %.4f" % mean)
 print("标准差 std = %.4f" % std)
