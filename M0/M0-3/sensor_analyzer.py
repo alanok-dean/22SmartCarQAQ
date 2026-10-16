@@ -37,11 +37,15 @@ except FileNotFoundError as x:
     print("找不到sensor_data.csv文件，请重试。错误代码为",x)
     sys.exit(1)
 
-for row in reader:
-    t = float(row["time"])
-    v = float(row["value"])    #value打错成大写了
-    times.append(t)
-    data.append(v)
+try :           #检查列名
+    for row in reader:
+        t = float(row["time"])
+        v = float(row["value"])    #value打错成大写了
+        times.append(t)
+        data.append(v)
+except KeyError :
+    print ("sensor_data.csv列名错误，请检查")
+    sys.exit(1)
 
 a = bool(times)
 b = bool(data)
