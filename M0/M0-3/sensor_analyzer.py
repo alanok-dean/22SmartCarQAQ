@@ -75,18 +75,17 @@ std = acc**0.5 / len(data)
 for v in data:
     if abs (v-mean) > 2 * std: ###离群值计算也应为绝对值，此处错误
         data.remove(v)
+cleaned = data
 
 # --- 输出清洗后的数据 ---
-output_path = os.path.join("/", OUTPUT_DIR, OUTPUT_FILE)
-os.chmod(OUTPUT_DIR,stat.S_IXGRP)
-os.chmod(output_path,stat.S_IXGRP)
-os.chmod(OUTPUT_FILE,stat.S_IXGRP)
-f = "cleaned_data.csv"
-f = open(output_path, "w")
-writer = csv.writer(f)
-writer.writerow(["time", "value"])
-for v in cleaned:
-    writer.writerow([v])
+current_dir = os.getcwd() # 获取当前工作目录
+output_path = os.path.join("/",current_dir,OUTPUT_DIR,OUTPUT_FILE)
+
+with open("output_path", "w") as f:
+    writer = csv.writer(f)
+    writer.writerow(["time", "value"])
+    for v in cleaned:
+        writer.writerow([v])
 
 print("均值 mean = %.4f" % mean)
 print("标准差 std = %.4f" % std)
