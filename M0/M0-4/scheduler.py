@@ -14,14 +14,16 @@ if sys.stdout.isatty():#处理颜色
     RED = "\033[91m"
     YELLOW = "\033[93m"
     BLUE =  "\033[94m"
+    PURPLE = "\033[95m"
+    GRENN_BLUE = "\033[96m"
     RESET = "\033[0m"
 else:
-    GREEN = RED =YELLOW = BLUE = RESET = ""
+    GREEN = RED =YELLOW = BLUE = PURPLE = GRENN_BLUE = RESET = ""
 
 if args.seed is not None:#锁定随机数
     random.seed(args.seed)
 
-try :#录入yaml或json文件
+try :#读取yaml或json文件
     file_path = args.config
     if file_path.endswith(".yaml"):
         with open (args.config,"r") as f:
@@ -37,6 +39,9 @@ try :#录入yaml或json文件
         sys.exit(1)
     
     task_list = config["tasks"]
+    if not task_list:#检查任务列表情况
+        print("错误,任务列表为空")
+        sys.exit(1)
     if args.timeout is not None: #无输入随机数则固定使用文件中随机数
         timeout = args.timeout
     else:
@@ -63,6 +68,9 @@ for task in task_list :
     name = task["name"]
     duration = task["duration"]
     success_rate = task["success_rate"] 
+    if success_rate > 1.0 or success_rate < 0.0:
+        print("成功率错误，请检查源文件！")
+        sys.exit(1)
     dependencies = task["dependencies"]
     new_task = Task(name,duration,success_rate,dependencies)
     tasks_dict[name] = new_task
@@ -75,23 +83,23 @@ class TaskScheduler : #定义任务总管理类
         self.is_timeout = False
     
     def task_run(self):  #定义任务运行方法
-        print("--现在开始调度任务--")
+        print(f"{GRENN_BLUE}--现在开始调度任务--{RESET}")
         start_time = time.time()#记录总开始时间
         print()
         
-        while True :   #1用列表记录任务处理状态，有则继续循环，无则终止
+        while True :   #1用列表记录任务处理状态，有未处理则继续循环，无则终止
             pending_tasks = []
             for t in self.tasks.values():
                 if t.status == "PENDING":
                     pending_tasks.append(t)
             if not pending_tasks:
-                print("--!!!所有任务处理完成!!!--")
+                print(f"{GRENN_BLUE}--!!!所有任务处理完成!!!--{RESET}")
                 break
             
-            if time.time() - start_time > timeout : #2超时终止
+            if time.time() - start_time > self.timeout : #这里会检测到超时
                 self.is_timeout = True
-                print("TIMEOUT")
-                print("--已超时，调度停止--")
+                print(f"{PURPLE}--TIMEOUT--{RESET}")
+                print(f"{PURPLE}--已超时，调度停止--{RESET}")
                 for t in pending_tasks :
                     t.status = "TIMEOUT"
                 break
@@ -128,10 +136,22 @@ class TaskScheduler : #定义任务总管理类
                 while task.attempts < 3:    #循环执行任务
                     task.attempts += 1
                     task.started_at = time.time()
+
                     if task.attempts >1:
                         print(f"{YELLOW}--任务{name}重试中  RETRY--{RESET}")
                         print()
+                    
+                    
+                    if time.time() +task.duration - start_time > self.timeout : #超时终止
+                        self.is_timeout = True
+                        print()
+                        print(f"{PURPLE}--已超时，调度停止--{RESET}")
+                        for t in self.tasks.values() :
+                            if t.status == "PENDING":
+                                t.status = "TIMEOUT"
+                        break
 
+                    
                     time.sleep(task.duration)
 
                     if random.random() < task.success_rate:
@@ -146,33 +166,38 @@ class TaskScheduler : #定义任务总管理类
                         print(f"--{RED}任务第{task.attempts}次{name}执行失败  FAILED--{RESET}")
                         print()
                     task.ended_at = time.time()
-
-
-                if not success:
-                    print(f"{RED}--任务{name}彻底失败  FAILED--{RESET}")
-                    print()
-                    print()
-                    task.status = "FAILED"
-                task.ended_at = time.time()
-
-
-                if time.time() - start_time > timeout : #2超时终止
+                    
+                if time.time() - start_time > self.timeout : #超时终止
                     self.is_timeout = True
                     print()
                     print("TIMEOUT")
-                    print("--已超时，调度停止--")
+                    print(f"{PURPLE}--已超时，调度停止--{RESET}")
                     for t in self.tasks.values() :
                         if t.status == "PENDING":
                             t.status = "TIMEOUT"
                     break
 
+
+                if not success:
+                    if self.is_timeout:
+                        task.status = "TIMEOUT"
+                        print(f"{PURPLE}--任务{name}因超时而终止  TIMEOUT--{RESET}")
+                    else:
+                        print(f"{RED}--任务{name}彻底失败  FAILED--{RESET}")
+                        task.status = "FAILED"
+                    print()
+                    print()
+
+                
+                task.ended_at = time.time()
+
             if not check_this_round and not self.is_timeout:
                 print("存在循环依赖，无法继续运行")
                 break
 
-            self.total_duration += time.time() - start_time
-            print (f"目前总时长为：",self.total_duration,"秒")
-            print()
+        self.total_duration += time.time() - start_time
+        print (f"目前总时长为：",self.total_duration,"秒")
+        print()
                             
     def generate_report(self,report_path):
         report_data = {
@@ -198,4 +223,4 @@ class TaskScheduler : #定义任务总管理类
 
 scheduler = TaskScheduler(tasks_dict,timeout)
 scheduler.task_run()
-scheduler.generate_report("report.json")
+scheduler.generate_report(args.report)
