@@ -25,17 +25,25 @@ if args.seed is not None:#锁定随机数
 
 try :#读取yaml或json文件
     file_path = args.config
-    if file_path.endswith(".yaml"):
-        with open (args.config,"r") as f:
-            config = yaml.safe_load(f)
-            print(f"成功读取yaml文件:{file_path}")
-    
+    if file_path.endswith(".yaml")  or file_path.endswith(".yml"):
+        try :    
+            with open (args.config,"r") as f:
+                config = yaml.safe_load(f)
+                print(f"成功读取yaml文件:{file_path}")
+        except yaml.YAMLError as ya:
+            print("yaml文件语法错误，错误详情：",ya)
+            sys.exit(1)
+        
     elif file_path.endswith(".json"):
-        with open (args.config,"r") as f:
-            config = json.load(f)
-            print(f"成功读取json文件:{file_path}")
+        try :
+            with open (args.config,"r") as f:
+                config = json.load(f)
+                print(f"成功读取json文件:{file_path}")
+        except json.JSONDecodeError as js:
+            print("json文件语法错误，错误详情：",js)
+            sys.exit(1)
     else :
-        print("输入文件错误,请重试")
+        print("文件不支持,请重试")
         sys.exit(1)
     
     task_list = config["tasks"]
@@ -47,9 +55,11 @@ try :#读取yaml或json文件
     else:
         timeout = config["timeout"]
 
-except Exception as a:
-    print("读取文件错误,请重试",a)
+except FileNotFoundError as a:
+    print("文件不存在,请重试",a)
     sys.exit(1) 
+except Exception as ee:
+    print("文件错误，错误为：",ee)
 
 class Task : #定义任务类
     def __init__(self,name,duration,success_rate,dependencies):
