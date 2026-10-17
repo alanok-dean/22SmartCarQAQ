@@ -1,49 +1,33 @@
 {
-  "timeout": false,
-  "total_duration": 12.72,
+  "timeout": true,
+  "total_duration": 14.02,
   "tasks": [
     {
       "name": "Init",
       "status": "SUCCESS",
       "attempts": 1,
       "duration": 0.5,
-      "started_at": 1792230273.8159523,
-      "ended_at": 1792230274.3162606
+      "started_at": 1792250573.0051603,
+      "ended_at": 1792250573.5059988
     },
     {
       "name": "Navigate",
       "status": "SUCCESS",
-      "attempts": 1,
+      "attempts": 2,
       "duration": 2.5,
-      "started_at": 1792230274.316278,
-      "ended_at": 1792230276.8190176
+      "started_at": 1792250576.0088155,
+      "ended_at": 1792250578.511568
     },
     {
       "name": "DetectQR",
-      "status": "SUCCESS",
-      "attempts": 1,
+      "status": "FAILED",
+      "attempts": 3,
       "duration": 1.5,
-      "started_at": 1792230276.819035,
-      "ended_at": 1792230278.320362
+      "started_at": 1792250581.515287,
+      "ended_at": 1792250583.0171065
     },
     {
       "name": "Grasp",
-      "status": "SUCCESS",
-      "attempts": 1,
-      "duration": 1.0,
-      "started_at": 1792230278.3203783,
-      "ended_at": 1792230279.321158
-    },
-    {
-      "name": "AvoidObstacle",
-      "status": "FAILED",
-      "attempts": 3,
-      "duration": 2.0,
-      "started_at": 1792230284.5364132,
-      "ended_at": 1792230286.5382552
-    },
-    {
-      "name": "Place",
       "status": "SKIPPED",
       "attempts": 0,
       "duration": 1.0,
@@ -51,8 +35,24 @@
       "ended_at": null
     },
     {
+      "name": "AvoidObstacle",
+      "status": "TIMEOUT",
+      "attempts": 3,
+      "duration": 2.0,
+      "started_at": 1792250587.021608,
+      "ended_at": 1792250587.0216308
+    },
+    {
+      "name": "Place",
+      "status": "TIMEOUT",
+      "attempts": 0,
+      "duration": 1.0,
+      "started_at": null,
+      "ended_at": null
+    },
+    {
       "name": "ReturnHome",
-      "status": "SKIPPED",
+      "status": "TIMEOUT",
       "attempts": 0,
       "duration": 2.5,
       "started_at": null,
