@@ -95,7 +95,7 @@ cleaned_time = times
 
 # --- 输出清洗后的数据 ---
 current_dir = os.getcwd() # 获取当前工作目录
-output_path = os.path.join("/",current_dir,OUTPUT_FILE)###此处文件路径错误
+output_path = os.path.join(current_dir,OUTPUT_FILE)###此处文件路径错误
 
 with open(output_path, "w") as f:  ###此处文件写入函数时使用错误/且路径不需要引号，应为变量
     writer = csv.writer(f)
