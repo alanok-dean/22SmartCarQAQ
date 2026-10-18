@@ -20,6 +20,7 @@ if sys.stdout.isatty():#处理颜色
 else:
     GREEN = RED =YELLOW = BLUE = PURPLE = GRENN_BLUE = RESET = ""
 
+
 if args.seed is not None:#锁定随机数
     random.seed(args.seed)
 
