@@ -3,11 +3,14 @@ import csv
 import math
 import sys
 import numpy
+import argparse
+parser = argparse.ArgumentParser(description="M0-2 ")#导入数据
+parser.add_argument("--config",type=str,required=True,help="配置文件路径")
+args = parser.parse_args()
 
-CONFIG_PATH = "config.yaml"
 
 try:#检查config是否存在
-    with open(CONFIG_PATH) as f:
+    with open (args.config,"r") as f:
         cfg = yaml.safe_load(f)
 except FileNotFoundError as e:
     print("找不到config文件，请重试。错误代码为",e)
