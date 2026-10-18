@@ -21,7 +21,7 @@ else:
     GREEN = RED =YELLOW = BLUE = PURPLE = GRENN_BLUE = RESET = ""
 
 
-if args.seed is not None:#锁定随机数
+if args.seed is not None:#锁定随机数 0
     random.seed(args.seed)
 
 try :#读取yaml或json文件
@@ -51,12 +51,13 @@ try :#读取yaml或json文件
     if not task_list:#检查任务列表情况
         print("错误,任务列表为空")
         sys.exit(1)
-    if args.timeout is not None: #无输入随机数则固定使用文件中随机数
+
+    if args.timeout is not None: #无输入超时则固定使用文件中超时数
         timeout = args.timeout
     else:
         timeout = config["timeout"]
 
-except FileNotFoundError as a:
+except FileNotFoundError as a:#其他排错
     print("文件不存在,请重试",a)
     sys.exit(1) 
 except Exception as ee:
