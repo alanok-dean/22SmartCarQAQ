@@ -20,9 +20,20 @@ import csv
 import os
 import sys
 import stat
+import argparse
+parser = argparse.ArgumentParser(description="M0-3")#导入数据
+parser.add_argument("--input",type=str,help="输入路径")
+parser.add_argument("--output",type=str,default="cleaned_data.csv",help="输出路径")
+args = parser.parse_args()
 
-INPUT_FILE = "sensor_data.csv"  #输入文件
-OUTPUT_FILE = "cleaned_data.csv"#输出文件
+if  args.input :
+    print("显式指定输入输出中")
+    INPUT_FILE = args.input  #输入文件
+    OUTPUT_FILE = args.output#输出文件
+else :
+    print("默认输入输出中")
+    INPUT_FILE = "sensor_data.csv"  #输入文件
+    OUTPUT_FILE = "cleaned_data.csv"#输出文件
 # OUTPUT_DIR = "out"            #输出目录,但是不知道有什么用，反正都要输出到当前工作目录
 
 data = []
@@ -76,8 +87,8 @@ std = std**0.5             ###标准差计算公式也错了
 # --- 剔除离群值 ---
 for i in range(len(data)-1,-1,-1) :
     if abs (data[i]-mean) > 2 * std: ###离群值计算也应为绝对值，此处错误
-        data.remove(data[i])
-        times.remove(times[i])
+        data.pop(i)
+        times.pop(i)
 
 cleaned = data    ###这里没有将v重新输入到cleaned里
 cleaned_time = times
@@ -90,7 +101,7 @@ with open(output_path, "w") as f:  ###此处文件写入函数时使用错误/�
     writer = csv.writer(f)
     writer.writerow(["time","value"])
     for a,b in zip(times,data):
-        writer.writerow([a,b])   #此处用ai问了一下怎么让两组数据一一对应，即zip函数
+        writer.writerow([round(a,2),b])   #此处用ai问了一下怎么让两组数据一一对应，即zip函数
 
 print("均值 mean = %.4f" % mean)
 print("标准差 std = %.4f" % std)

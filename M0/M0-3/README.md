@@ -1,4 +1,5 @@
-
+可以显视输入输出，格式  python3 sensor_analyzer.py --input sensor_data.csv（输入的） --output cleaned_data.csv（输出的）
+也支持默认输入输出 sensor_data.csv（入）  cleaned_data.csv（出）
 
 | 问题出处 | 现象 | 原因 | 如何解决 |
 | ----------- | ----------- | ----------- | ----------- |
