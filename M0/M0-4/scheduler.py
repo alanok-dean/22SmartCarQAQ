@@ -177,16 +177,6 @@ class TaskScheduler : #定义任务总管理类
                         print()
                     task.ended_at = time.time()
                     
-                if time.time() - start_time > self.timeout : #超时终止
-                    self.is_timeout = True
-                    print()
-                    print("TIMEOUT")
-                    print(f"{PURPLE}--已超时，调度停止--{RESET}")
-                    for t in self.tasks.values() :
-                        if t.status == "PENDING":
-                            t.status = "TIMEOUT"
-                    break
-
 
                 if not success:
                     if self.is_timeout:
