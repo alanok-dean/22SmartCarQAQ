@@ -13,11 +13,11 @@ extern "C" {
 #endif
 
 /* ======================== LED ======================== */
-#define LED_PORT            GPIOB
-#define LED_PIN             GPIO_PIN_1
-#define LED_PIN_NAME        "PB1"                /* 仅用于打印，换板同步改 */
-#define LED_ACTIVE_LOW      0                     /* 0 = 高电平点亮（飞线接法） */
-#define LED_PORT_CLK_EN()   __HAL_RCC_GPIOB_CLK_ENABLE()
+#define LED_PORT            GPIOC
+#define LED_PIN             GPIO_PIN_13
+#define LED_PIN_NAME        "PC13"                /* 仅用于打印，换板同步改 */
+#define LED_ACTIVE_LOW      1                     /* 1 = 低电平点亮（板载接法） */
+#define LED_PORT_CLK_EN()   __HAL_RCC_GPIOC_CLK_ENABLE()
 
 /* ======================== KEY ======================== */
 #define KEY_PORT            GPIOA
