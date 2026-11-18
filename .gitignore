@@ -15,3 +15,10 @@
 # CubeMX 带进来的巨型库
 **/Drivers/CMSIS/DSP/
 **/Drivers/CMSIS/NN/
+
+# Python（M0 相关）
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
