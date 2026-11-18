@@ -80,15 +80,44 @@ BRR 寄存器：整数部分 `39 = 0x27`，小数部分 `0.0625 × 16 = 1`，故
 
 ## 7. 换板流程（现场考点）
 
-所有引脚定义集中在 **`Core/Inc/board_config.h`**，换板只改这一个文件：
+所有引脚定义集中在 **`Core/Inc/board_config.h`**，换板只改这一个文件。
+
+### 7.1 必须同时改四处
+
+以 PC13（低有效）→ PB1（高有效）为例：
 
 ```c
-#define LED_PORT            GPIOB
-#define LED_PIN             GPIO_PIN_1
+#define LED_PORT            GPIOB                        /* ① 端口 */
+#define LED_PIN             GPIO_PIN_1                   /* ② 引脚 */
 #define LED_PIN_NAME        "PB1"
-#define LED_ACTIVE_LOW      0
-#define LED_PORT_CLK_EN()   __HAL_RCC_GPIOB_CLK_ENABLE()
+#define LED_ACTIVE_LOW      0                            /* ③ 极性 */
+#define LED_PORT_CLK_EN()   __HAL_RCC_GPIOB_CLK_ENABLE() /* ④ 端口时钟 */
 ```
 
-改完 → Rebuild → 烧录 → 验证，**不需要动 `main.c`**。
-实测耗时：**约 4 分钟**（含编译与烧录）。
+### 7.2 实测踩到的两个坑
+
+**坑 1：只改引脚号，没改端口和时钟 → 完全不亮**
+
+第一次改动时写成了 `LED_PORT = GPIOC` + `LED_PIN = GPIO_PIN_1`，实际驱动的是 **PC1**，
+而 LED 接在 PB1，所以面包板上的灯毫无反应。
+
+更隐蔽的是**端口时钟**：`LED_PORT_CLK_EN()` 若仍为 `__HAL_RCC_GPIOC_CLK_ENABLE()`，
+则 GPIOB 处于关闭状态，此时**写 ODR 寄存器不会生效，也不产生任何报错**——
+这是"代码看起来没错、引脚就是不动"的最常见原因。
+
+**坑 2：极性没改 → 逻辑整体反转**
+
+LED 从"低电平点亮（灌电流）"改成飞线接法的"高电平点亮（拉电流）"后，
+若 `LED_ACTIVE_LOW` 仍为 1，现象是**不按时灯亮、按下时灯灭**，
+功能完全反了，但编译和烧录都正常。
+
+### 7.3 验证方式
+
+无万用表时可用 LED + 220Ω 电阻接在新引脚上验证；有条件时直接万用表量
+新引脚对 GND 的电压，按住/松开按键看电平翻转，更快且不必焊接。
+
+### 7.4 实测耗时
+
+改 4 行 → Rebuild → 烧录 → 验证：**约 4 分钟**（含编译与烧录，不含排查上述两坑的时间）。
+排查两坑额外耗时约 20 分钟，结论已沉淀到 7.2。
+
