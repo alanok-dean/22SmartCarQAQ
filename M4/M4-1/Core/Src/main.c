@@ -227,7 +227,7 @@ int main(void)
     if ((uint32_t)(t_now - t_status) >= PROTO_STATUS_MS)
     {
       t_status += PROTO_STATUS_MS;
-      proto_send_status(0, 0, 0, hb_seq++);
+      proto_send_status(0, 0, 0, hb_seq++, (uint16_t)s_proto.bad_cnt);
     }
 
     /* ---------- 按键扫描 + 消抖（10ms 一次，2 次一致才认） ---------- */

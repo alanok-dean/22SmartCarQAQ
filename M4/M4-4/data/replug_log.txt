@@ -1,0 +1,43 @@
+[TX] CMD_SPEED L=300 R=300  AA 55 01 04 00 01 01 2C 01 2C 01 2B 0F
+[RX] seq= 57 L=    0 R=    0 pitch=   0.0 hb= 4409 bad=  0 | good=1 bad=0
+[RX] seq= 63 L=    0 R=    0 pitch=   0.0 hb= 4415 bad=  0 | good=7 bad=0
+[RX] seq= 69 L=    0 R=    0 pitch=   0.0 hb= 4421 bad=  0 | good=13 bad=0
+[RX] seq= 75 L=    0 R=    0 pitch=   0.0 hb= 4427 bad=  0 | good=19 bad=0
+[RX] seq=  0 L=    0 R=    0 pitch=   0.0 hb=    0 bad=  0 | good=24 bad=1
+[WARN] 串口异常: GetOverlappedResult failed (PermissionError(13, '拒绝访问。', None, 5)) —— 设备可能已断开，等待重连
+[INFO] 串口已重新连接
+[RX] seq= 30 L=    0 R=    0 pitch=   0.0 hb=   30 bad=  0 | good=43 bad=1
+[WARN] 串口异常: GetOverlappedResult failed (PermissionError(13, '拒绝访问。', None, 5)) —— 设备可能已断开，等待重连
+[INFO] 串口已重新连接
+[RX] seq= 84 L=    0 R=    0 pitch=   0.0 hb=   84 bad=  0 | good=44 bad=1
+[RX] seq= 91 L=    0 R=    0 pitch=   0.0 hb=   91 bad=  0 | good=51 bad=1
+[RX] seq= 98 L=    0 R=    0 pitch=   0.0 hb=   98 bad=  0 | good=58 bad=1
+[RX] seq=104 L=    0 R=    0 pitch=   0.0 hb=  104 bad=  0 | good=64 bad=1
+[RX] seq=109 L=    0 R=    0 pitch=   0.0 hb=  109 bad=  0 | good=69 bad=1
+[RX] seq=116 L=    0 R=    0 pitch=   0.0 hb=  116 bad=  0 | good=76 bad=1
+[RX] seq=124 L=    0 R=    0 pitch=   0.0 hb=  124 bad=  0 | good=84 bad=2
+[RX] seq=130 L=    0 R=    0 pitch=   0.0 hb=  130 bad=  0 | good=90 bad=2
+[RX] seq=135 L=    0 R=    0 pitch=   0.0 hb=  135 bad=  0 | good=95 bad=2
+[RX] seq=141 L=    0 R=    0 pitch=   0.0 hb=  141 bad=  0 | good=102 bad=3
+[RX] seq=148 L=    0 R=    0 pitch=   0.0 hb=  148 bad=  0 | good=109 bad=3
+[RX] seq=153 L=    0 R=    0 pitch=   0.0 hb=  153 bad=  0 | good=114 bad=3
+[RX] seq=161 L=    0 R=    0 pitch=   0.0 hb=  161 bad=  0 | good=122 bad=3
+[RX] seq=166 L=    0 R=    0 pitch=   0.0 hb=  166 bad=  0 | good=127 bad=3
+[RX] seq=173 L=    0 R=    0 pitch=   0.0 hb=  173 bad=  0 | good=134 bad=3
+[RX] seq=181 L=    0 R=    0 pitch=   0.0 hb=  181 bad=  0 | good=142 bad=3
+[RX] seq=187 L=    0 R=    0 pitch=   0.0 hb=  187 bad=  0 | good=148 bad=3
+[RX] seq=193 L=    0 R=    0 pitch=   0.0 hb=  193 bad=  0 | good=154 bad=3
+[RX] seq=201 L=    0 R=    0 pitch=   0.0 hb=  201 bad=  0 | good=162 bad=3
+[RX] seq=207 L=    0 R=    0 pitch=   0.0 hb=  207 bad=  0 | good=168 bad=3
+[RX] seq=213 L=    0 R=    0 pitch=   0.0 hb=  213 bad=  0 | good=174 bad=3
+[RX] seq=221 L=    0 R=    0 pitch=   0.0 hb=  221 bad=  0 | good=182 bad=3
+[RX] seq=227 L=    0 R=    0 pitch=   0.0 hb=  227 bad=  0 | good=188 bad=3
+[RX] seq=233 L=    0 R=    0 pitch=   0.0 hb=  233 bad=  0 | good=194 bad=3
+[RX] seq=241 L=    0 R=    0 pitch=   0.0 hb=  241 bad=  0 | good=202 bad=3
+[RX] seq=249 L=    0 R=    0 pitch=   0.0 hb=  249 bad=  0 | good=210 bad=3
+[RX] seq=253 L=    0 R=    0 pitch=   0.0 hb=  253 bad=  0 | good=214 bad=3
+[RX] seq=  5 L=    0 R=    0 pitch=   0.0 hb=  261 bad=  0 | good=222 bad=3
+[RX] seq= 11 L=    0 R=    0 pitch=   0.0 hb=  267 bad=  0 | good=228 bad=3
+[RX] seq= 17 L=    0 R=    0 pitch=   0.0 hb=  273 bad=  0 | good=234 bad=3
+
+[SUM] 好帧=239 坏帧=3 注入脏包=3

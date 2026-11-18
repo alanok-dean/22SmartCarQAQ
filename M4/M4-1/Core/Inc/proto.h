@@ -66,7 +66,8 @@ uint16_t proto_build(uint8_t msg_id, uint8_t seq,
 void     proto_uart_start(void);            /* 启动单字节中断接收 */
 uint8_t  proto_uart_pop(uint8_t *byte);     /* 从环形缓冲取 1 字节，1=成功 */
 void     proto_send_status(uint16_t l_rpm, uint16_t r_rpm,
-                           int16_t pitch_x10, uint16_t heartbeat);
+                           int16_t pitch_x10, uint16_t heartbeat,
+                           uint16_t bad_cnt);
 
 #ifdef __cplusplus
 }

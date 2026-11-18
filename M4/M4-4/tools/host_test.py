@@ -51,6 +51,17 @@ def build_frame(msg_id: int, seq: int, payload: bytes) -> bytes:
     return SOF + body + struct.pack("<H", crc16_ccitt_false(body))
 
 
+def corrupted_frame() -> bytes:
+    """构造一个 SOF/长度/CRC 结构都正常、但 CRC 值被故意改坏的帧。
+
+    这样接收端的校验一定会失败 -> bad_frame_cnt++，
+    用来演示「坏帧计数正确」与「坏帧之后仍能重同步」。
+    """
+    frame = bytearray(build_frame(MSG_CMD_SPEED, 0xEE, struct.pack("<hh", 0, 0)))
+    frame[-1] ^= 0xFF          # 破坏 CRC 高字节
+    return bytes(frame)
+
+
 class Parser:
     def __init__(self):
         self.state = PST_SOF1
@@ -136,7 +147,8 @@ def main():
     ap.add_argument("-b", "--baud", type=int, default=115200)
     ap.add_argument("--send", default="300,300", help="下发左右轮目标 r/min")
     ap.add_argument("--seconds", type=float, default=10.0)
-    ap.add_argument("--inject", type=int, default=0, help="每 N 个好帧插一次脏字节")
+    ap.add_argument("--inject", type=int, default=0, help="每 N 个好帧往串口写脏字节（考验单片机重同步）")
+    ap.add_argument("--rx-noise", type=int, default=0, help="每 N 个好帧向本地解析器灌脏字节（考验上位机重同步）")
     args = ap.parse_args()
 
     ser = serial.Serial(args.port, args.baud, timeout=0.05)
@@ -154,7 +166,27 @@ def main():
     injected = 0
 
     while time.time() - t0 < args.seconds:
-        chunk = ser.read(64)
+        try:
+            chunk = ser.read(64)
+        except (serial.SerialException, OSError) as exc:
+            # 拔掉 USB-TTL：不退出，等设备回来再继续（现场破坏测试要用）
+            print(f"[WARN] 串口异常: {exc} —— 设备可能已断开，等待重连")
+            try:
+                ser.close()
+            except Exception:
+                pass
+            reconnected = False
+            while time.time() - t0 < args.seconds:
+                try:
+                    ser = serial.Serial(args.port, args.baud, timeout=0.05)
+                    print("[INFO] 串口已重新连接")
+                    reconnected = True
+                    break
+                except Exception:
+                    time.sleep(0.5)
+            if not reconnected:
+                break
+            continue
         for b in chunk:
             result = parser.feed(b)
             if result is None:
@@ -169,10 +201,16 @@ def main():
                     last_print = time.time()
 
         if args.inject and parser.good > 0 and parser.good % args.inject == 0:
-            noise = bytes(random.getrandbits(8) for _ in range(5))
-            ser.write(noise)
+            ser.write(corrupted_frame())      # 打到单片机：考验下位机重同步 + 计数
             injected += 1
             parser.good += 1          # 避免每轮都重复注入
+
+        # 打入本地解析器：考验上位机重同步 + 计数（bad 应增长，good 继续增长）
+        if args.rx_noise and parser.good > 0 and parser.good % args.rx_noise == 0:
+            for b in corrupted_frame():
+                parser.feed(b)
+            injected += 1
+            parser.good += 1
 
     print(f"\n[SUM] 好帧={parser.good} 坏帧={parser.bad} 注入脏包={injected}")
     ser.close()

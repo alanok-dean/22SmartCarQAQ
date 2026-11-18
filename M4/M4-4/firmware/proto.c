@@ -210,7 +210,8 @@ uint8_t proto_uart_pop(uint8_t *byte)
 }
 
 void proto_send_status(uint16_t l_rpm, uint16_t r_rpm,
-                       int16_t pitch_x10, uint16_t heartbeat)
+                       int16_t pitch_x10, uint16_t heartbeat,
+                       uint16_t bad_cnt)
 {
     uint8_t  payload[10];
     uint8_t  frame[2 + 5 + 10 + 2];
@@ -224,8 +225,8 @@ void proto_send_status(uint16_t l_rpm, uint16_t r_rpm,
     payload[5] = (uint8_t)((uint16_t)pitch_x10 >> 8);
     payload[6] = (uint8_t)(heartbeat & 0xFFu);
     payload[7] = (uint8_t)(heartbeat >> 8);
-    payload[8] = 0u;
-    payload[9] = 0u;
+    payload[8] = (uint8_t)(bad_cnt & 0xFFu);
+    payload[9] = (uint8_t)(bad_cnt >> 8);
 
     n = proto_build(MSG_STATUS, (uint8_t)(heartbeat & 0xFFu),
                     payload, 10u, frame, sizeof(frame));
