@@ -171,7 +171,19 @@ void proto_uart_start(void)
 {
     s_rx_head = 0;
     s_rx_tail = 0;
+
+    /* 使能 USART1 全局中断。CubeMX 里没勾 NVIC，这里手动开，
+       避免为了一个中断重新生成工程。 */
+    HAL_NVIC_SetPriority(USART1_IRQn, 2, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
+
     (void)HAL_UART_Receive_IT(&huart1, &s_rx_byte, 1);
+}
+
+/* USART1 中断向量：交给 HAL 分发，最终进入 HAL_UART_RxCpltCallback */
+void USART1_IRQHandler(void)
+{
+    HAL_UART_IRQHandler(&huart1);
 }
 
 /* HAL 的接收完成回调：只做入缓冲 + 重新挂接收，绝不解析 */
