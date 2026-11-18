@@ -1,0 +1,17 @@
+# Keil 构建产物（任意层级）
+**/MDK-ARM/*/
+*.o
+*.axf
+*.hex
+*.map
+*.dep
+*.lnp
+*.sct
+*.d
+*.htm
+*.uvguix.*
+*.dbgconf
+
+# CubeMX 带进来的巨型库
+**/Drivers/CMSIS/DSP/
+**/Drivers/CMSIS/NN/
