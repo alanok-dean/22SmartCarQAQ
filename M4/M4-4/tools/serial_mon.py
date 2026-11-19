@@ -60,6 +60,8 @@ def main():
     ap.add_argument("--send", default=None, help="连上后发一条 CMD_SPEED，格式 L,R（如 300,300）")
     ap.add_argument("--only-text", action="store_true",
                     help="只显示含 '[' 的行（过滤掉二进制状态帧的乱码）")
+    ap.add_argument("--match", default=None,
+                    help="只显示含指定关键字的行，如 --match STEP")
     ap.add_argument("--revs", type=float, default=0,
                     help="退出时按这个圈数算 CPR，如 --revs 10")
     args = ap.parse_args()
@@ -93,6 +95,8 @@ def main():
             if not line:
                 continue
             if args.only_text and "[" not in line:
+                continue
+            if args.match and args.match not in line:
                 continue
             print(line)
             m = re.search(r"\[ENC\].*?total=(-?\d+)", line)
