@@ -1,0 +1,40 @@
+[INFO] /dev/ttyUSB0 @ 115200 8N1
+[TX] CMD_SPEED L=20 R=20 : AA 55 01 04 00 01 01 14 00 14 00 2C 0D
+[RX] t=  0.3s seq=218 L=   19 R=   19 pitch=  -1.7 hb= 1754 bad=  0 | good=6 bad=0
+[RX] t=  0.6s seq=224 L=   20 R=   20 pitch=  -1.7 hb= 1760 bad=  0 | good=12 bad=0
+[RX] t=  0.9s seq=230 L=   20 R=   20 pitch=  -1.7 hb= 1766 bad=  0 | good=18 bad=0
+[RX] t=  1.2s seq=236 L=   20 R=   20 pitch=  -1.7 hb= 1772 bad=  0 | good=24 bad=0
+[RX] t=  1.5s seq=242 L=   19 R=   19 pitch=  -1.7 hb= 1778 bad=  0 | good=30 bad=0
+[RX] t=  1.8s seq=248 L=   19 R=   19 pitch=  -1.7 hb= 1784 bad=  0 | good=36 bad=0
+
+[SUM] 好帧=40 坏帧=0 注入脏包=0
+[INFO] /dev/ttyUSB0 @ 115200 8N1
+[TX] CMD_SPEED L=60 R=60 : AA 55 01 04 00 01 01 3C 00 3C 00 EE 30
+[RX] t=  0.3s seq=  2 L=   62 R=   62 pitch=  -1.7 hb= 1794 bad=  0 | good=6 bad=0
+[RX] t=  0.6s seq=  8 L=   61 R=   61 pitch=  -1.6 hb= 1800 bad=  0 | good=12 bad=0
+[RX] t=  0.9s seq= 14 L=   60 R=   60 pitch=  -1.6 hb= 1806 bad=  0 | good=18 bad=0
+[RX] t=  1.2s seq= 20 L=   60 R=   60 pitch=  -1.6 hb= 1812 bad=  0 | good=24 bad=0
+[RX] t=  1.5s seq= 26 L=   60 R=   60 pitch=  -1.6 hb= 1818 bad=  0 | good=30 bad=0
+[RX] t=  1.8s seq= 32 L=   60 R=   60 pitch=  -1.6 hb= 1824 bad=  0 | good=36 bad=0
+
+[SUM] 好帧=40 坏帧=0 注入脏包=0
+[INFO] /dev/ttyUSB0 @ 115200 8N1
+[TX] CMD_SPEED L=30 R=30 : AA 55 01 04 00 01 01 1E 00 1E 00 4C 8A
+[RX] t=  0.3s seq= 43 L=   28 R=   28 pitch=  -1.7 hb= 1835 bad=  0 | good=6 bad=0
+[RX] t=  0.6s seq= 49 L=   30 R=   30 pitch=  -1.7 hb= 1841 bad=  0 | good=12 bad=0
+[RX] t=  0.9s seq= 55 L=   29 R=   29 pitch=  -1.7 hb= 1847 bad=  0 | good=18 bad=0
+[RX] t=  1.2s seq= 61 L=   30 R=   30 pitch=  -1.7 hb= 1853 bad=  0 | good=24 bad=0
+[RX] t=  1.5s seq= 67 L=   30 R=   30 pitch=  -1.7 hb= 1859 bad=  0 | good=30 bad=0
+[RX] t=  1.8s seq= 73 L=   30 R=   30 pitch=  -1.7 hb= 1865 bad=  0 | good=36 bad=0
+
+[SUM] 好帧=40 坏帧=0 注入脏包=0
+[INFO] /dev/ttyUSB0 @ 115200 8N1
+[TX] CMD_SPEED L=0 R=0 : AA 55 01 04 00 01 01 00 00 00 00 CD 13
+[RX] t=  0.3s seq= 84 L=    0 R=    0 pitch=  -1.7 hb= 1876 bad=  0 | good=7 bad=0
+[RX] t=  0.6s seq= 90 L=    0 R=    0 pitch=  -1.7 hb= 1882 bad=  0 | good=13 bad=0
+[RX] t=  0.9s seq= 96 L=    0 R=    0 pitch=  -1.7 hb= 1888 bad=  0 | good=19 bad=0
+[RX] t=  1.2s seq=102 L=    0 R=    0 pitch=  -1.7 hb= 1894 bad=  0 | good=25 bad=0
+[RX] t=  1.5s seq=108 L=    0 R=    0 pitch=  -1.7 hb= 1900 bad=  0 | good=31 bad=0
+[RX] t=  1.8s seq=114 L=    0 R=    0 pitch=  -1.7 hb= 1906 bad=  0 | good=37 bad=0
+
+[SUM] 好帧=41 坏帧=0 注入脏包=0
