@@ -359,6 +359,10 @@ int main(void)
           tgt_r = (int16_t)((uint16_t)s_proto.frame.payload[2]
                           | ((uint16_t)s_proto.frame.payload[3] << 8));
           uart_printf("[CMD] L=%d R=%d\r\n", tgt_l, tgt_r);
+
+          /* M4-3 + M4-4 打通：上位机下发的转速直接进速度环。
+           * 单电机演示，先取左轮目标；motor_set_target 内部会限幅到 ±130rpm。 */
+          motor_set_target((float)tgt_l);
         }
       }
     }

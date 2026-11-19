@@ -40,6 +40,14 @@ cd D:\SmartCar_Projects\M4\M4-3\tools
 python analyze_step.py ..\data\step_test.txt --plot ..\docs\plots\step_response.png
 ```
 
+也可以由 PC 通过 M4-4 的协议直接下发目标转速（Linux 上位机）：
+
+```bash
+cd M4/M4-4/linux && ./upper -d /dev/ttyUSB0 -s 40,40 -t 8
+```
+
+此时 `CMD_SPEED` 的目标会进速度环，状态帧回传实测轮速——两个模块合成一条完整链路。
+
 ## 设计要点
 
 - **10 ms 严格等间隔**：用 TIM2 更新中断驱动控制环，而不是在主循环里判时间。
