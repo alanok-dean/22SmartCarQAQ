@@ -23,6 +23,8 @@
 /* USER CODE BEGIN Includes */
 #include "board_config.h"
 #include "proto.h"
+#include "mpu6050.h"
+#include "filter.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -151,6 +153,17 @@ int main(void)
   uint8_t  rx_b       = 0;          /* 串口收到的单字节 */
   int16_t  tgt_l      = 0;          /* 上位机下发的左轮目标 */
   int16_t  tgt_r      = 0;          /* 上位机下发的右轮目标 */
+  uint8_t  i2c_addrs[8] = {0};      /* I2C 扫描结果 */
+  uint8_t  i2c_cnt    = 0;          /* 应答的器件个数 */
+  uint8_t  imu_ok     = 0;          /* 0 = MPU6050 初始化成功 */
+  uint32_t t_imu      = 0;          /* 上次读 IMU 的时刻 */
+  mpu6050_data_t imu;               /* IMU 数据 */
+  pitch_filter_t flt;               /* 互补滤波器 */
+  uint8_t  imu_calib  = 0;          /* 0 = 还在估零偏，1 = 正常融合 */
+  uint32_t t_calib    = 0;          /* 零偏估计起点 */
+  uint32_t t_imu_prt  = 0;          /* 上次打印人读信息 */
+  float    gy_sum     = 0.0f;       /* 零偏累加 */
+  uint16_t gy_n       = 0;          /* 零偏样本数 */
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -198,6 +211,26 @@ int main(void)
 
   proto_init(&s_proto);
   proto_uart_start();
+
+  /* ---------- M4-2：先证明 I2C 通，再谈算法 ---------- */
+  i2c_cnt = mpu6050_scan_bus(i2c_addrs, 8);
+  uart_printf("[I2C] found %u device(s):", (unsigned)i2c_cnt);
+  for (i = 0; i < i2c_cnt && i < 8; i++) {
+    uart_printf(" 0x%02X", (unsigned)i2c_addrs[i]);
+  }
+  uart_send_str("\r\n");
+
+  imu_ok = mpu6050_init();
+  if (imu_ok == 0u) {
+    uart_send_str("[IMU] MPU6050 init OK\r\n");
+  } else {
+    uart_printf("[IMU] init FAILED, code=%u\r\n", (unsigned)imu_ok);
+  }
+
+  /* 互补滤波：τ = 0.5s，α = 0.5/(0.5+dt) */
+  filter_init(&flt, 0.5f);
+  t_calib = HAL_GetTick();
+  uart_send_str("[CAL] 请保持静止 1 秒，正在估计陀螺零偏...\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -213,6 +246,51 @@ int main(void)
       uart_printf("[HB] t=%lu ms cnt=%lu\r\n",
                   (unsigned long)t_now, (unsigned long)hb_cnt);
       hb_cnt++;
+    }
+
+    /* ---------- M4-2：每 20ms 读 IMU，互补滤波 ---------- */
+    if (imu_ok == 0u && (uint32_t)(t_now - t_imu) >= 20u)
+    {
+      t_imu = t_now;
+      if (mpu6050_read(&imu) == 0u)
+      {
+        float pitch_acc = mpu6050_pitch_acc_deg(&imu);
+
+        if (imu_calib == 0u)
+        {
+          /* 启动后 1 秒静止：估俯仰轴陀螺零偏 */
+          gy_sum += imu.gy_dps;
+          gy_n++;
+          if ((uint32_t)(t_now - t_calib) >= 1000u)
+          {
+            imu_calib = 1u;
+            filter_set_bias(&flt, gy_sum / (float)gy_n);
+            filter_reset(&flt, pitch_acc);
+            uart_printf("[CAL] gyro bias = %.2f dps (%u samples), init pitch = %.1f deg\r\n",
+                        flt.bias_gy, (unsigned)gy_n, pitch_acc);
+          }
+        }
+        else
+        {
+          float pitch = filter_update(&flt, t_now, imu.gy_dps, pitch_acc);
+
+          /* CSV 行：供离线分析与画图；字段固定，便于 grep "^CSV," */
+          uart_printf("CSV,%lu,%.2f,%.2f,%.2f,%.2f\r\n",
+                      (unsigned long)t_now,
+                      flt.pitch_gyro, pitch, pitch_acc, imu.gy_dps);
+
+          if ((uint32_t)(t_now - t_imu_prt) >= 1000u)
+          {
+            t_imu_prt = t_now;
+            uart_printf("[IMU] acc=%.1f fused=%.1f gyro_int=%.1f bias=%.2f\r\n",
+                        pitch_acc, pitch, flt.pitch_gyro, flt.bias_gy);
+          }
+        }
+      }
+      else
+      {
+        uart_send_str("[IMU] read failed\r\n");
+      }
     }
 
     /* ---------- M4-4 收帧：环形缓冲里的字节全部喂给状态机 ---------- */
