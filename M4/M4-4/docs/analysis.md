@@ -146,4 +146,64 @@ ST-Link 仅接 `GND/SWDIO/SWCLK` 后不再复现。
 - 协议两端**独立实现、逐字节对齐**：示例帧 CRC 一致，坏帧判定一致。
 - 三种破坏（错波特率模式下的乱流、脏字节、拔插）下**两端均不死机**，
   坏帧计数准确，且都能自动重同步。
-- 传输层已完成，等 M4-2 的编码器/IMU 数据接入即可上报真实轮速与姿态。
+
+---
+
+## 8. Linux 上位机与 MCU 的真实串口联调
+
+前面几节的数据来自 Windows 端的 Python 工具。任务 4 要求上位机是 **Linux C 程序**，
+因此又用 `upper.c` 与实板做了一次联调。
+
+**环境**：WSL2 Ubuntu 22.04 + `usbipd-win` 把 CH340（USB-SERIAL CH340，VID:PID = 1a86:7523）
+从 Windows 透传进 WSL，WSL 内出现 `/dev/ttyUSB0`。
+
+```bash
+$ usbipd list                      # Windows 侧
+1-2    1a86:7523  USB-SERIAL CH340 (COM11)
+$ usbipd bind --busid 1-2
+$ usbipd attach --wsl --busid 1-2
+
+$ cd M4/M4-4/linux && make && ./upper -d /dev/ttyUSB0 -s 40,40 -t 8
+```
+
+### 8.1 联调结果（M4-3 + M4-4 打通）
+
+`CMD_SPEED` 下发后，下位机把目标转速交给 M4-3 的速度环，状态帧回传**实测轮速**：
+
+```
+[INFO] /dev/ttyUSB0 @ 115200 8N1
+[TX] CMD_SPEED L=40 R=40 : AA 55 01 04 00 01 01 28 00 28 00 0F 2E
+[RX] t= 0.3s seq= 21 L=   41 R=   41 pitch=  -1.6 hb=  277 bad=  0 | good=6 bad=0
+[RX] t= 1.1s seq= 36 L=   39 R=   39 pitch=  -1.6 hb=  292 bad=  0 | good=21 bad=0
+[RX] t= 3.0s seq= 74 L=   40 R=   40 pitch=  -1.6 hb=  330 bad=  0 | good=59 bad=0
+[RX] t= 7.9s seq=173 L=   39 R=   39 pitch=  -1.6 hb=  429 bad=  0 | good=158 bad=0
+
+[SUM] 好帧=159 坏帧=0 注入脏包=0
+```
+
+可以确认四件事：
+
+1. **CRC 校验双向正确**：159 帧全部通过，0 坏帧；
+2. **帧率准确**：`hb` 每 0.3 秒 +6，即 20 Hz，与 50 ms 周期一致；
+3. **载荷是真实物理量**：`pitch=-1.6°` 来自 MPU6050，`L/R` 来自编码器闭环，
+   不是写死的常量；
+4. **闭环精度**：目标 40 rpm，实测稳定在 39~41 rpm（±2.5%）。
+
+至此链路完整：
+
+```
+PC(C) --CMD_SPEED--> 协议解析 --CRC--> PI 速度环 --> TB6612 --> 电机
+                                                              |
+PC(C) <--STATUS---- 组帧+CRC <--实测rpm/俯仰角 <-- 编码器/MPU6050
+```
+
+### 8.2 联调中踩到的两个坑
+
+| 现象 | 根因 | 解决 |
+|---|---|---|
+| WSL 里 `upper` 收到 0 帧，Windows 端却正常 | CH340 已挂在 Windows 上 | `usbipd bind + attach --wsl` |
+| 烧录后串口**一个字节都没有**，`cat /dev/ttyUSB0` 抓 0 字节 | Keil 下载后默认不自动运行，芯片停在调试挂起状态 | 勾选 `Flash Download → Reset and Run`，或下载后按一下 RST |
+
+第二个坑尤其值得记：**"串口没数据"不等于"协议写错了"**，先用
+`cat /dev/ttyUSB0 | xxd` 抓原始字节，就能区分"板子没在发"和"程序解析不了"。
+
