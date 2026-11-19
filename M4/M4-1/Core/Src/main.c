@@ -25,6 +25,8 @@
 #include "proto.h"
 #include "mpu6050.h"
 #include "filter.h"
+#include "encoder.h"
+#include "motor.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -164,6 +166,11 @@ int main(void)
   uint32_t t_imu_prt  = 0;          /* 上次打印人读信息 */
   float    gy_sum     = 0.0f;       /* 零偏累加 */
   uint16_t gy_n       = 0;          /* 零偏样本数 */
+  uint32_t t_enc      = 0;          /* 上次编码器采样时刻 */
+  uint32_t t_log      = 0;          /* 上次打印 STEP 过程数据的时刻 */
+  uint32_t t_mot_last = 0;          /* 最近一次电机"有动作"的时刻 */
+  uint32_t t_key_down = 0;          /* 按键按下的时刻（判长按） */
+  uint8_t  key_long   = 0;          /* 1 = 本次长按已经触发过 */
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -231,6 +238,16 @@ int main(void)
   filter_init(&flt, 0.5f);
   t_calib = HAL_GetTick();
   uart_send_str("[CAL] 请保持静止 1 秒，正在估计陀螺零偏...\r\n");
+
+  encoder_init();
+  uart_printf("[ENC] TIM3 encoder started, CPR = %u (0 = 未标定)\r\n",
+              (unsigned)ENCODER_CPR);
+
+  /* ---------- M4-3：电机驱动 + 10ms 控制节拍 ---------- */
+  motor_init();
+  uart_send_str("[MOT] TB6612 ready: PWMA=PB8 PWMB=PB9 "
+                "AIN=PB12/13 BIN=PB14/15 STBY=PB11\r\n");
+  uart_send_str("[MOT] key: press = cycle 0/40/80 rpm, hold 1s = step test\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -246,6 +263,43 @@ int main(void)
       uart_printf("[HB] t=%lu ms cnt=%lu\r\n",
                   (unsigned long)t_now, (unsigned long)hb_cnt);
       hb_cnt++;
+    }
+
+    /* ---------- M4-2：编码器累计量
+     * 注意：增量已经被 10ms 控制中断取走了，这里不能再调
+     * encoder_read_delta()，否则控制环会丢脉冲。 */
+    if ((uint32_t)(t_now - t_enc) >= 1000u)
+    {
+      t_enc = t_now;
+      uart_printf("[ENC] total=%ld rpm=%.2f tgt=%.1f pwm=%.0f\r\n",
+                  (long)motor_get_total(), motor_get_rpm(),
+                  motor_get_target(), motor_get_pwm());
+    }
+
+    /* ---------- M4-3：20ms 一行过程数据，供离线画阶跃响应 ---------- */
+    if ((uint32_t)(t_now - t_log) >= 20u)
+    {
+      uint8_t active = (motor_get_target() != 0.0f) ||
+                       (motor_profile_running() != 0u);
+      t_log = t_now;
+      if (active) { t_mot_last = t_now; }
+      /* 目标回 0 之后再记 1.5 秒，才能看到"回到零速"的稳定过程 */
+      if (active || ((t_mot_last != 0u) &&
+                     ((uint32_t)(t_now - t_mot_last) < 1500u)))
+      {
+        uart_printf("STEP,%lu,%.1f,%.2f,%.0f,%.0f\r\n",
+                    (unsigned long)(motor_get_ticks() * 10u),
+                    motor_get_target(),
+                    motor_get_rpm(),
+                    motor_get_pwm(),
+                    motor_get_integ());
+      }
+    }
+
+    /* ---------- M4-3：阶跃序列跑完的提示 ---------- */
+    if (motor_profile_done())
+    {
+      uart_send_str("[PROF] step test done\r\n");
     }
 
     /* ---------- M4-2：每 20ms 读 IMU，互补滤波 ---------- */
@@ -313,7 +367,18 @@ int main(void)
     if ((uint32_t)(t_now - t_status) >= PROTO_STATUS_MS)
     {
       t_status += PROTO_STATUS_MS;
-      proto_send_status(0, 0, 0, hb_seq++, (uint16_t)s_proto.bad_cnt);
+      {
+        /* M4-3 接通后这里填真实轮速：上位机终于能看到闭环结果了。
+         * 单电机演示，左右先填同一路；俯仰角有就带上（×10 定点）。 */
+        int16_t m_l = (int16_t)motor_get_rpm();
+        int16_t m_p = 0;
+
+        if (imu_ok == 0u && imu_calib != 0u) {
+          m_p = (int16_t)(flt.pitch * 10.0f);
+        }
+        proto_send_status((uint16_t)m_l, (uint16_t)m_l, m_p,
+                          hb_seq++, (uint16_t)s_proto.bad_cnt);
+      }
     }
 
     /* ---------- 按键扫描 + 消抖（10ms 一次，2 次一致才认） ---------- */
@@ -336,11 +401,39 @@ int main(void)
           /* ---------- 功能 B-2：按键事件打印 ---------- */
           uart_printf("[KEY] %s t=%lu ms\r\n",
                       pressed ? "DOWN" : "UP", (unsigned long)t_now);
+
+          /* ---------- M4-3：短按轮换目标转速 ---------- */
+          if (pressed)
+          {
+            t_key_down = t_now;
+          }
+          else if ((uint32_t)(t_now - t_key_down) < 1000u)
+          {
+            float tgt = motor_get_target();
+            if      (tgt <  20.0f) { motor_set_target( 40.0f); }
+            else if (tgt <  60.0f) { motor_set_target( 80.0f); }
+            else                   { motor_set_target(  0.0f); }
+            uart_printf("[MOT] target = %.0f rpm\r\n",
+                        motor_get_target());
+          }
         }
       }
       else
       {
         key_cnt = 0;
+      }
+
+      /* ---------- M4-3：长按 1 秒启动内置阶跃测试 ---------- */
+      if (!key_stable)
+      {
+        key_long = 0u;
+      }
+      else if ((key_long == 0u) &&
+               ((uint32_t)(t_now - t_key_down) >= 1000u))
+      {
+        key_long = 1u;
+        motor_start_profile();
+        uart_send_str("[PROF] step test: 0 -> +60 -> 0 -> -60 -> 0 rpm\r\n");
       }
     }
 
