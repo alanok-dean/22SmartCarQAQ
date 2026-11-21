@@ -46,6 +46,15 @@
                    (LED_ACTIVE_LOW ? GPIO_PIN_RESET : GPIO_PIN_SET))
 #define LED_OFF()  HAL_GPIO_WritePin(LED_PORT, LED_PIN, \
                    (LED_ACTIVE_LOW ? GPIO_PIN_SET : GPIO_PIN_RESET))
+
+/* ================= 串口示波器录制模式（M4-2 任务 4） =================
+ * VOFA+ 的 FireWater 协议只认"纯数字+逗号+换行"，行首字母会让整帧解析失败。
+ * 所以这里做一个开关：
+ *   VOFA_MODE = 1  纯数值 CSV（t,gyro_int,fused,acc,gy），并临时关掉
+ *                  心跳/ENC/IMU 文本行和 50ms 二进制状态帧，画面才干净
+ *   VOFA_MODE = 0  恢复正常的文本日志 + 二进制帧（平时用这个）
+ * 录完曲线截图后记得改回 0 重新烧录。 */
+#define VOFA_MODE   0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -247,6 +256,7 @@ int main(void)
   motor_init();
   uart_send_str("[MOT] TB6612 ready: PWMA=PB8 PWMB=PB9 "
                 "AIN=PB12/13 BIN=PB14/15 STBY=PB11\r\n");
+  uart_printf("[MOT] controller = %s\r\n", motor_mode_name());
   uart_send_str("[MOT] key: press = cycle 0/40/80 rpm, hold 1s = step test\r\n");
   /* USER CODE END 2 */
 
@@ -260,8 +270,10 @@ int main(void)
     if ((uint32_t)(t_now - t_hb) >= HEARTBEAT_MS)
     {
       t_hb += HEARTBEAT_MS;         /* 累加而不是赋值 = 不会累积漂移 */
+#if !VOFA_MODE
       uart_printf("[HB] t=%lu ms cnt=%lu\r\n",
                   (unsigned long)t_now, (unsigned long)hb_cnt);
+#endif
       hb_cnt++;
     }
 
@@ -271,9 +283,11 @@ int main(void)
     if ((uint32_t)(t_now - t_enc) >= 1000u)
     {
       t_enc = t_now;
+#if !VOFA_MODE
       uart_printf("[ENC] total=%ld rpm=%.2f tgt=%.1f pwm=%.0f\r\n",
                   (long)motor_get_total(), motor_get_rpm(),
                   motor_get_target(), motor_get_pwm());
+#endif
     }
 
     /* ---------- M4-3：20ms 一行过程数据，供离线画阶跃响应 ---------- */
@@ -329,16 +343,24 @@ int main(void)
           float pitch = filter_update(&flt, t_now, imu.gy_dps, pitch_acc);
 
           /* CSV 行：供离线分析与画图；字段固定，便于 grep "^CSV," */
+#if VOFA_MODE
+          /* 示波器模式：只输出 1 路 rpm，通道映射不可能出错。
+           * 手转输出轴一圈 → 曲线上出现一正一负两个鼓包。 */
+          uart_printf("%.2f\r\n", motor_get_rpm());
+#else
           uart_printf("CSV,%lu,%.2f,%.2f,%.2f,%.2f\r\n",
                       (unsigned long)t_now,
                       flt.pitch_gyro, pitch, pitch_acc, imu.gy_dps);
+#endif
 
+#if !VOFA_MODE
           if ((uint32_t)(t_now - t_imu_prt) >= 1000u)
           {
             t_imu_prt = t_now;
             uart_printf("[IMU] acc=%.1f fused=%.1f gyro_int=%.1f bias=%.2f\r\n",
                         pitch_acc, pitch, flt.pitch_gyro, flt.bias_gy);
           }
+#endif
         }
       }
       else
@@ -371,6 +393,7 @@ int main(void)
     if ((uint32_t)(t_now - t_status) >= PROTO_STATUS_MS)
     {
       t_status += PROTO_STATUS_MS;
+#if !VOFA_MODE
       {
         /* M4-3 接通后这里填真实轮速：上位机终于能看到闭环结果了。
          * 单电机演示，左右先填同一路；俯仰角有就带上（×10 定点）。 */
@@ -383,6 +406,7 @@ int main(void)
         proto_send_status((uint16_t)m_l, (uint16_t)m_l, m_p,
                           hb_seq++, (uint16_t)s_proto.bad_cnt);
       }
+#endif
     }
 
     /* ---------- 按键扫描 + 消抖（10ms 一次，2 次一致才认） ---------- */
