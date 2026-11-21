@@ -43,11 +43,21 @@ extern "C" {
 /* 装反了就把这个改成 -1，不用改接线 */
 #define MOT_DIR_SIGN      (-1)
 
+/* ---------------- 控制器结构选择（M4-3 任务 3 要求对比 P/PI/PID） ----------------
+ *   0 = 纯 P          只有比例，必然有稳态误差（这是要演示的第一个结论）
+ *   1 = PI            加积分消稳态误差，但阶跃超调变大
+ *   2 = PI + 前馈     默认，前馈先把工作点点到位，超调最小
+ *   3 = PID           再加微分抑制超调，代价是对测量噪声敏感
+ * 改这里 → 编译烧录 → 录一组 STEP 数据，三组录完做对比。 */
+#define MOT_CTRL_MODE     2
+
 /* ---------------- PI 参数（答辩时要能解释怎么调的） ---------------- */
 /* 电机静态增益约 1000/130 ≈ 7.7 占空比/rpm，前馈按这个给初值 */
 #define MOT_KP            4.0f
 #define MOT_KI            80.0f      /* 单位：占空比/(rpm·s) */
 #define MOT_KFF           7.5f
+#define MOT_KD            0.05f      /* 微分作用在"测量值"上，不是误差上 */
+#define MOT_D_ALPHA       0.3f       /* 微分项一阶低通，否则噪声会把电机抖响 */
 #define MOT_CTRL_DT       0.01f      /* 10ms */
 
 /* ---------------- 接口 ---------------- */
@@ -68,6 +78,7 @@ float    motor_get_pwm(void);        /* 当前输出占空比（带符号） */
 float    motor_get_integ(void);      /* 积分项，看抗饱和是否生效 */
 int32_t  motor_get_total(void);      /* 累计脉冲 */
 uint32_t motor_get_ticks(void);      /* 控制周期计数，×10ms = 运行时间 */
+const char *motor_mode_name(void);   /* 当前控制器结构名，用于开机打印 */
 
 #ifdef __cplusplus
 }

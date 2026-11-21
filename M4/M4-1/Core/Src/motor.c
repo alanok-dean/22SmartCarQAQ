@@ -33,6 +33,8 @@ static volatile uint32_t s_ticks    = 0;
 static volatile uint8_t  s_prof_on  = 0;
 static volatile uint8_t  s_prof_done= 0;
 static volatile uint8_t  s_prof_idx = 0;
+static volatile float    s_rpm_prev = 0.0f;   /* 上一周期转速，算微分用 */
+static volatile float    s_dmeas    = 0.0f;   /* 滤波后的转速微分 */
 
 /* 阶跃序列：{该段结束时刻(ms), 目标转速(rpm)} */
 typedef struct { uint32_t t_end; float tgt; } prof_step_t;
@@ -112,13 +114,36 @@ static void motor_step_10ms(void)
         }
     }
 
-    /* 3) PI + 前馈
-     *    u = Kp·e + ∫Ki·e·dt + Kff·目标
-     *    前馈直接给出维持该转速所需的占空比，积分只需补电池电压波动，
+    /* 3) 控制律：按 MOT_CTRL_MODE 选择结构
+     *    前馈直接给出维持目标转速所需的占空比，积分只需补电池电压波动，
      *    这样同样的 Kp 下超调更小。 */
     err = s_target - s_rpm;
+
+#if (MOT_CTRL_MODE == 0)
+    /* 纯 P：结构最简单，但没有积分就消不掉稳态误差 */
+    s_integ = 0.0f;
+    u = MOT_KP * err;
+#elif (MOT_CTRL_MODE == 1)
+    /* PI：积分把稳态误差压到零，代价是阶跃超调变大 */
+    s_integ += MOT_KI * err * MOT_CTRL_DT;
+    u = MOT_KP * err + s_integ;
+#elif (MOT_CTRL_MODE == 3)
+    /* PID：微分抑制超调。微分作用在"测量值"而非误差上，
+     * 否则目标突变时微分项会产生一个巨大的冲击（微分冲击）。
+     * 再叠一阶低通，否则编码器量化噪声会被放大成电机啸叫。 */
+    {
+        float dmeas;
+        s_integ += MOT_KI * err * MOT_CTRL_DT;
+        dmeas   = (s_rpm - s_rpm_prev) / MOT_CTRL_DT;
+        s_dmeas += MOT_D_ALPHA * (dmeas - s_dmeas);
+        u = MOT_KP * err + s_integ - MOT_KD * s_dmeas;
+        s_rpm_prev = s_rpm;
+    }
+#else
+    /* 默认：PI + 前馈 */
     s_integ += MOT_KI * err * MOT_CTRL_DT;
     u = MOT_KP * err + s_integ + MOT_KFF * s_target;
+#endif
 
     /* 4) 抗积分饱和：两个方向同时做
      *    (a) 输出限幅后，如果误差还在把积分往饱和方向推，就把这次积分退回去
@@ -251,3 +276,16 @@ float    motor_get_pwm(void)    { return s_pwm; }
 float    motor_get_integ(void)  { return s_integ; }
 int32_t  motor_get_total(void)  { return s_total; }
 uint32_t motor_get_ticks(void)  { return s_ticks; }
+
+const char *motor_mode_name(void)
+{
+#if   (MOT_CTRL_MODE == 0)
+    return "P";
+#elif (MOT_CTRL_MODE == 1)
+    return "PI";
+#elif (MOT_CTRL_MODE == 3)
+    return "PID";
+#else
+    return "PI+FF";
+#endif
+}
