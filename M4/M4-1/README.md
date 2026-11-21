@@ -143,7 +143,71 @@ if ((uint32_t)(t_now - t_hb) >= HEARTBEAT_MS) {
 
 ---
 
-## 7. AI 使用声明  对啊这个刚开始都是deepseek harness写的，不过我确实都有看过了
+## 7. 一键编译 / 烧录（命令行）
+
+平时点 Keil 的按钮没法复现，也没法交给队友批量构建。`UV4.exe` 支持命令行，
+所以封装成 `tools/build.ps1`：
+
+```powershell
+cd D:\SmartCar_Projects\M4\M4-1\tools
+
+# 增量编译
+powershell -ExecutionPolicy Bypass -File .\build.ps1
+
+# 全量重编（改过 CubeMX 配置后用这个）
+powershell -ExecutionPolicy Bypass -File .\build.ps1 -Rebuild
+
+# 编译 + 烧录
+powershell -ExecutionPolicy Bypass -File .\build.ps1 -Flash
+```
+
+脚本行为：
+
+| 情况 | 输出 |
+|---|---|
+| 0 error 0 warning | `[OK] 编译通过` |
+| 有 warning | `[OK] 编译通过：有 warning` |
+| 有 error | `[FAIL]` + 打印 `build.log` 末尾 10 行 |
+| Keil GUI 开着 | 直接拒绝执行（避免两边抢 `.uvprojx`） |
+
+底层命令：
+
+```bat
+D:\Keil\UV4\UV4.exe -b MDK-ARM\M4_1_LED_LIGHTEN.uvprojx -j0 -o build.log
+D:\Keil\UV4\UV4.exe -f MDK-ARM\M4_1_LED_LIGHTEN.uvprojx -j0 -o flash.log
+```
+
+`-b` 增量编译、`-r` 全量重编、`-f` 下载，返回码 0/1 = 通过，2 = 有错。
+
+### 已知限制：烧录仍然要在 GUI 里做
+
+命令行烧录实测失败：
+
+```
+ST-LINK USB communication error
+Target DLL has been cancelled
+```
+
+原因不是配置写错，而是**这块板子的 ST-Link 只能在 "Connect under Reset" 模式下握手**，
+而它的 4 针调试口**没有 NRST 线**，无法让工具自己产生复位时序。
+GUI 里能成功，靠的是人工动作：按住 RST → 点 Connect → 松开 RST。命令行注入不了这个时序。
+
+因此本项目采用的做法是：
+
+| 环节 | 方式 | 可复现性 |
+|---|---|---|
+| 编译 | `tools/build.ps1` 命令行 | ✅ 完全可复现，队友拿到仓库即可构建 |
+| 烧录 | Keil GUI 按 F8 | ⚠️ 需人工点一次 |
+
+**结论**：从源码到可烧录的 `.hex/.axf` 这一段已经完全脚本化；
+最后一步依赖硬件复位时序，属于工具链限制，不是工程没做。
+若要彻底解决，需要把 ST-Link 的 RST 接到板子的 NRST，让 `Under Reset` 由工具控制。
+
+> 下载完**仍需按一下板子的 RST**：Keil 默认不勾 "Reset and Run" 时芯片会停在挂起状态。
+
+---
+
+## 8. AI 使用声明
 
 本题中 **`board_config.h` 的宏封装、`BOARD_GPIO_Init()`、
 非阻塞心跳与消抖的实现、`board_notes.md` 与本文档的初稿**使用了 AI 辅助生成。
