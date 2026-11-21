@@ -7,9 +7,10 @@
 | 项 | 位置 |
 |---|---|
 | 源码 | `../M4-1/Core/Inc/motor.h`、`../M4-1/Core/Src/motor.c` |
-| 数据 | `./data/step_test.txt`（内置阶跃序列的完整串口日志） |
-| 分析脚本 | `./tools/analyze_step.py` |
-| 曲线 | `./docs/plots/step_response.png` |
+| 阶跃数据 | `./data/step_P.txt` `step_PI.txt` `step_test.txt`(PI+FF) `step_PID.txt` |
+| 抗扰数据 | `./data/dist_PI.txt` `dist_PIFF.txt` `dist_PID.txt` |
+| 分析脚本 | `./tools/analyze_step.py`、`./tools/compare_modes.py`、`./tools/analyze_dist.py` |
+| 曲线 | `./docs/plots/step_response.png`、`mode_compare.png`、`dist_reject.png` |
 | 分析文档 | `./docs/analysis.md` |
 
 ## 引脚
@@ -37,7 +38,18 @@ python -u serial_mon.py -p COM11 --match STEP --save ..\M4-3\data\step_test.txt
 
 ```powershell
 cd D:\SmartCar_Projects\M4\M4-3\tools
+
+# 单组阶跃指标
 python analyze_step.py ..\data\step_test.txt --plot ..\docs\plots\step_response.png
+
+# 四种控制结构对比（P / PI / PI+前馈 / PID）
+python compare_modes.py ..\data\step_P.txt ..\data\step_PI.txt ^
+    ..\data\step_test.txt ..\data\step_PID.txt ^
+    --labels P,PI,PI+FF,PID --plot ..\docs\plots\mode_compare.png
+
+# 抗扰对比（手捏停轮子）
+python analyze_dist.py ..\data\dist_PI.txt ..\data\dist_PIFF.txt ^
+    ..\data\dist_PID.txt --labels PI,PI+FF,PID --plot ..\docs\plots\dist_reject.png
 ```
 
 也可以由 PC 通过 M4-4 的协议直接下发目标转速（Linux 上位机）：
