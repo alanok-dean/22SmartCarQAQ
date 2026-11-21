@@ -13,6 +13,7 @@ serial_mon.py —— 串口文本监视器（看 MCU 的 printf 输出）
   python serial_mon.py -p COM8 --save ../data/board_log.txt
 """
 import argparse
+import os
 import re
 import struct
 import sys
@@ -81,6 +82,10 @@ def main():
         print(f"[MON] 已发送 CMD_SPEED L={l} R={r}:",
               " ".join(f"{b:02X}" for b in frame))
 
+    if args.save:
+        # 目录不存在就自动建，省得因为多一层少一层 ../ 报 FileNotFoundError
+        save_dir = os.path.dirname(os.path.abspath(args.save))
+        os.makedirs(save_dir, exist_ok=True)
     fh = open(args.save, "w", encoding="utf-8") if args.save else None
     enc = []          # 记录所有 [ENC] 行的 total 值，退出时给首末值
     t0 = time.time()
